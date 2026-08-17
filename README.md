@@ -1,5 +1,11 @@
 # BusArrivalBoard
 
+<div align="center">
+  <img src="docs/images/hero_v3.jpg" alt="BusArrivalBoard - 实时公交到站显示器" width="100%">
+</div>
+
+<br>
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
