@@ -1,0 +1,22 @@
+# 深圳 M592 路配置示例
+
+city: "深圳"
+line: "M592"
+station: "安翼嘉寓"
+
+# 刷新配置
+refresh_interval: 60  # 秒，建议 >= 60 避免被限流
+auto_refresh: true
+
+# 显示配置
+display:
+  max_buses: 3           # 最多显示前几辆车
+  show_crowd: true       # 显示拥挤度
+  show_distance: true    # 显示距离
+  show_gps_coords: false # 显示GPS坐标（调试用）
+
+# 通知配置（可选）
+notification:
+  enabled: false
+  threshold_minutes: 5   # 车辆还有X分钟时通知
+  sound: true
