@@ -16,6 +16,7 @@ Example:
     >>> result.nearest_bus.eta_minutes
     3
 """
+
 from __future__ import annotations
 
 import json
@@ -478,11 +479,7 @@ class ChelaiLeClient:
         # 缺失时用「目标站序 / 车辆最大站序」的较大值兜底，供环线取模使用
         total = _as_int(line_raw.get("stationsNum"), default=0) or max(
             [target_order]
-            + [
-                _as_int(b.get("order"), default=0)
-                for b in buses_raw
-                if isinstance(b, dict)
-            ]
+            + [_as_int(b.get("order"), default=0) for b in buses_raw if isinstance(b, dict)]
         )
 
         line_info = LineInfo(
@@ -552,8 +549,7 @@ class ChelaiLeClient:
 
         # 刷新间隔（秒）—— 上游 refreshInterval 可能为 0/缺失，回退到默认值
         refresh_interval = (
-            _as_int(data.get("refreshInterval"), default=0)
-            or DEFAULT_REFRESH_INTERVAL
+            _as_int(data.get("refreshInterval"), default=0) or DEFAULT_REFRESH_INTERVAL
         )
 
         return RealtimeResult(

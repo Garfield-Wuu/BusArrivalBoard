@@ -1,4 +1,5 @@
 """数据模型测试（纯离线）"""
+
 import pytest
 from pydantic import ValidationError as PydanticValidationError
 
@@ -64,9 +65,7 @@ class TestRealtimeResult:
     def test_nearest_bus_is_first(self):
         near = make_bus(bus_id="near", order=15)
         far = make_bus(bus_id="far", order=2)
-        result = RealtimeResult(
-            line=self._line(), target_order=17, buses=[near, far]
-        )
+        result = RealtimeResult(line=self._line(), target_order=17, buses=[near, far])
         assert result.nearest_bus.bus_id == "near"
 
     def test_nearest_bus_none_when_empty(self):

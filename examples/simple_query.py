@@ -1,4 +1,5 @@
 """简单使用示例 - 查询深圳M592路实时到站"""
+
 from chelaile_sdk import ChelaiLeClient
 
 # 创建客户端
@@ -40,7 +41,7 @@ result = client.get_realtime_buses(
     station_id=target_station.station_id,
     target_order=target_station.order,
     lat=target_station.lat,
-    lng=target_station.lng
+    lng=target_station.lng,
 )
 
 print(f"\n实时数据: {'有GPS' if result.real_data else '时刻表'}")
@@ -51,7 +52,7 @@ for i, bus in enumerate(result.buses, 1):
         eta_text = f"{bus.eta_minutes}分钟 (预计 {bus.eta.display_time})"
     else:
         eta_text = "暂无预测"
-    
+
     print(f"🚌 {i}. {bus.bus_id}")
     print(f"   位置: 第{bus.order}站 | 拥挤度: {bus.crowd_level}")
     print(f"   预计到达: {eta_text}\n")

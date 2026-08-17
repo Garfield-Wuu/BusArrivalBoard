@@ -1,4 +1,5 @@
 """配置加载测试（纯离线，使用 tmp_path 写临时 YAML）"""
+
 import pytest
 import yaml
 
@@ -15,9 +16,7 @@ class TestFlatFormat:
     """旧的单站点扁平格式必须继续可用（向后兼容）"""
 
     def test_flat_becomes_single_target(self, tmp_path):
-        path = write_yaml(
-            tmp_path, {"city": "深圳", "line": "M592", "station": "安翼嘉寓"}
-        )
+        path = write_yaml(tmp_path, {"city": "深圳", "line": "M592", "station": "安翼嘉寓"})
         cfg = load_config(path)
         assert isinstance(cfg, AppConfig)
         assert len(cfg.targets) == 1

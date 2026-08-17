@@ -1,4 +1,5 @@
 """加密与签名模块测试（纯离线，不触网）"""
+
 import base64
 
 import pytest
@@ -19,9 +20,7 @@ def _encrypt(plaintext: str) -> str:
     data = plaintext.encode("utf-8")
     pad = 16 - (len(data) % 16)
     data += bytes([pad]) * pad
-    encryptor = Cipher(
-        algorithms.AES(AES_KEY), modes.ECB(), backend=default_backend()
-    ).encryptor()
+    encryptor = Cipher(algorithms.AES(AES_KEY), modes.ECB(), backend=default_backend()).encryptor()
     return base64.b64encode(encryptor.update(data) + encryptor.finalize()).decode()
 
 
@@ -52,9 +51,7 @@ class TestGenerateSignature:
         import hashlib
 
         params = {"cityId": "014", "key": "M592"}
-        expected = hashlib.md5(
-            ('"cityId"="014"&"key"="M592"' + SIGN_SALT).encode()
-        ).hexdigest()
+        expected = hashlib.md5(('"cityId"="014"&"key"="M592"' + SIGN_SALT).encode()).hexdigest()
         assert generate_signature(params) == expected
 
     def test_empty_params(self):

@@ -13,6 +13,7 @@ Example:
     >>> for target, result in monitor.poll_once():
     ...     print(target.display_name(), len(result.buses))
 """
+
 from __future__ import annotations
 
 import logging
@@ -96,6 +97,7 @@ class ResolvedTarget:
         station_name: 站点全名（用于显示）
         total_stations: 线路总站数
     """
+
     target: WatchTarget
     city_id: str
     line_id: str
