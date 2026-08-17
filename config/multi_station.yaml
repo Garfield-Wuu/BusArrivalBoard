@@ -1,0 +1,28 @@
+# 多站点监控示例
+#
+# 与 shenzhen_m592.yaml 的单站点扁平格式不同，这里用 targets 列表
+# 同时盯多条线路 / 多个站点。两种格式 load_config() 都支持。
+
+refresh_interval: 60   # 秒，最低 30，建议 >= 60 以免给上游造成压力
+
+targets:
+  - city: "深圳"
+    line: "M592"
+    station: "安翼嘉寓"
+    alias: "楼下上班车"       # 可选，显示时用它代替线路名
+
+  - city: "深圳"
+    line: "M592"
+    station: "后瑞地铁站"
+    alias: "回程地铁换乘"
+
+display:
+  max_buses: 3         # 每个站点最多显示几辆车
+  show_crowd: true     # 显示拥挤度
+  show_distance: true  # 显示距站距离
+  show_gps_coords: false
+
+notification:
+  enabled: false
+  threshold_minutes: 5  # 最近一班 <= 5 分钟时提醒
+  sound: true
