@@ -1,0 +1,18 @@
+# ESP-IDF 构建产物与本地配置
+build/
+sdkconfig
+sdkconfig.old
+sdkconfig.bak
+*.swp
+*.swo
+.DS_Store
+
+# VSCode: settings.json 含本机 IDF 路径与串口号，不入库；
+# c_cpp_properties.json 只引用变量、可共享，故保留在版本控制中。
+.vscode/settings.json
+
+# 日志与临时文件
+*.log
+*.bin
+*.elf
+*.map

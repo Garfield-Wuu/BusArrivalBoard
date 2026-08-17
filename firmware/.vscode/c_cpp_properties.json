@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "ESP-IDF",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "includePath": [
+        "${config:idf.espIdfPath}/components/**",
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/build/config"
+      ],
+      "browse": {
+        "path": ["${config:idf.espIdfPath}/components", "${workspaceFolder}"],
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "_comment": "compileCommands 由 idf.py build 生成；IntelliSense 优先用它解析，无需硬编码工具链路径（路径含版本号，会随 IDF 升级失效）",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+    }
+  ],
+  "version": 4
+}

@@ -1,0 +1,35 @@
+# ESP-IDF SDK 配置默认值
+#
+# 用于固定构建行为，确保在不同机器上编译结果一致。
+# 用户可以用 idf.py menuconfig 覆盖这些默认值。
+
+# 目标芯片：ESP32-S3（优先推荐，向下兼容 ESP32/ESP32-C3）
+CONFIG_IDF_TARGET="esp32s3"
+
+# 分区表：支持 OTA 固件升级（factory + 2 个 OTA 分区）
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+
+# WiFi 性能优化
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=10
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=32
+CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=32
+
+# 深度睡眠唤醒源
+CONFIG_ESP_SLEEP_RTC_TIMER_WAKEUP=y
+
+# 日志等级：默认 INFO，生产环境可改 WARN
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# 编译优化：优化体积（-Os），Flash 有限时重要
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+
+# 禁用不需要的组件以节省 Flash
+CONFIG_BT_ENABLED=n
+
+# 栈大小：主任务需要足够空间（渲染用）
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# watchdog 超时：网络下载可能较慢，放宽超时
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=10

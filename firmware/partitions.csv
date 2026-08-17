@@ -1,0 +1,13 @@
+# 分区表 — 支持 OTA 固件升级
+#
+# factory + ota_0 + ota_1 双分区交替升级，nvs 存储 WiFi 凭据与配置。
+# 总 Flash 需求：约 4MB（ESP32-S3 N16R8 的 16MB Flash 完全够用）
+#
+# Name,   Type, SubType, Offset,  Size,    Flags
+nvs,      data, nvs,     0x9000,  0x6000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory, 0x10000, 1M,
+ota_0,    app,  ota_0,   ,        1M,
+ota_1,    app,  ota_1,   ,        1M,
+nvs_key,  data, nvs_keys,,        0x1000,
+otadata,  data, ota,     ,        0x2000,

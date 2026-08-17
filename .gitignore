@@ -27,6 +27,10 @@ ENV/
 
 # IDE
 .vscode/
+# 例外：ESP-IDF 工程的 IntelliSense 配置只引用变量、可跨机器共享，
+# 团队成员需要它才能获得正确的头文件索引。
+!firmware/.vscode/
+!firmware/.vscode/c_cpp_properties.json
 .idea/
 *.swp
 *.swo
