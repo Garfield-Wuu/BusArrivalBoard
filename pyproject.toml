@@ -20,7 +20,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
+    # 上游要求 Accept-Encoding 含 br（该请求头是服务端指纹校验的一部分，
+    # 不能简化），因此 brotli 解码能力是硬依赖：缺少它会拿到无法解码的乱码字节。
     "requests>=2.31.0",
+    "brotli>=1.0.9",
     "cryptography>=41.0.0",
     "PyYAML>=6.0.0",
     "click>=8.1.0",

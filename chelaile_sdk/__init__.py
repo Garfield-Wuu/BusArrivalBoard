@@ -42,7 +42,7 @@ from .exceptions import (
 )
 from .models import BusETA, BusInfo, City, LineInfo, RealtimeResult, Station
 
-__version__ = "1.0.0"
+__version__ = "0.1.0"
 
 __all__ = [
     "ChelaiLeClient",

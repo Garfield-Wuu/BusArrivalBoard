@@ -4,6 +4,8 @@
 提供 MD5 签名和 AES-256-ECB 解密功能
 """
 
+from __future__ import annotations
+
 import base64
 import hashlib
 

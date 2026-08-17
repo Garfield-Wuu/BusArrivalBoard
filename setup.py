@@ -26,6 +26,7 @@ setup(
     python_requires=">=3.9",
     install_requires=[
         "requests>=2.31.0",
+        "brotli>=1.0.9",
         "cryptography>=41.0.0",
         "PyYAML>=6.0.0",
         "click>=8.1.0",

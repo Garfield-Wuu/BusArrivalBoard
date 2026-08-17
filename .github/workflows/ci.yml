@@ -6,10 +6,36 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  # 同一分支的新推送会取消仍在跑的旧任务，避免排队浪费
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # 格式检查只需跑一次，不必在每个 Python 版本上重复
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install lint tools
+        run: pip install black isort
+
+      - name: black
+        run: black --check --diff .
+
+      - name: isort
+        run: isort --check-only --diff .
+
   test:
     runs-on: ubuntu-latest
     strategy:
+      # 不要因为一个版本失败就掩盖其他版本的结果
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
@@ -23,20 +49,36 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install dependencies
+      - name: Install package and dev deps
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Lint (black + isort, check only)
+      - name: Import check (catches version-specific syntax early)
+        # 3.9 曾因 `int | None` 在导入期直接崩，这一步让原因一目了然
         run: |
-          black --check .
-          isort --check-only .
-
-      - name: Type check
-        run: mypy chelaile_sdk bus_arrival_board
-        continue-on-error: true
+          python -c "import chelaile_sdk; print(chelaile_sdk.__version__)"
+          python -c "import bus_arrival_board.cli, bus_arrival_board.config, bus_arrival_board.monitor"
 
       - name: Run offline tests
         # 不跑 network 标记的用例：CI 不应依赖第三方实时接口
-        run: pytest -m "not network" --cov=chelaile_sdk --cov-report=term-missing
+        run: pytest -m "not network" --cov=chelaile_sdk --cov=bus_arrival_board --cov-report=term-missing
+
+  # 类型检查独立成非阻塞任务，避免存量告警一直把 CI 染红
+  typecheck:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          pip install -e ".[dev]"
+
+      - name: mypy
+        run: mypy chelaile_sdk bus_arrival_board

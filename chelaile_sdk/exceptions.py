@@ -2,6 +2,8 @@
 车来了 SDK 异常定义
 """
 
+from __future__ import annotations
+
 
 class ChelaiLeException(Exception):
     """车来了 SDK 基础异常"""

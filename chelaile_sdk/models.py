@@ -4,6 +4,8 @@
 使用 Pydantic 进行数据验证和序列化
 """
 
+from __future__ import annotations
+
 from typing import Optional
 
 from pydantic import BaseModel, Field
