@@ -30,12 +30,16 @@ from bus_arrival_board.epd.ble_client import (
 )
 from bus_arrival_board.epd.drivers import DRIVER_NAMES, EPDDriver
 from bus_arrival_board.epd.renderer import BusDisplayRenderer
+from bus_arrival_board.epd.updater import EPDUpdater, UpdateStats
 
 __all__ = [
     # 客户端
     "EPDClient",
     # 渲染器
     "BusDisplayRenderer",
+    # 高层封装
+    "EPDUpdater",
+    "UpdateStats",
     # 异常
     "EPDError",
     "EPDConnectionError",
