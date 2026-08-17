@@ -491,7 +491,7 @@ http.end();
 ```cpp
 std::vector<std::pair<String, String>> params = {
     {"s", "h5"}, {"wxs", "wx_app"}, {"sign", "1"},
-    {"cityId", "014"}, {"key", "M592"}
+    {"cityId", "014"}, {"key", "M592"}  // 深圳是 014，不是 034（034 是上海）
     // ...（参考 constants.py 添加所有 DEFAULT_PARAMS）
 };
 String sign = generateSignature(params);
