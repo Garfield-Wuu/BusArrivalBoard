@@ -480,25 +480,39 @@ class ChelaiLeClient:
             end_station=line_raw.get("endSn", ""),
             first_time=line_raw.get("firstTime"),
             last_time=line_raw.get("lastTime"),
-            total_stations=_as_int(line_raw.get("stationNum")),
+            total_stations=_as_int(line_raw.get("stationsNum")),
         )
 
         # 解析车辆列表
         buses_raw = data.get("buses", [])
-        bus_models: list[BusInfo] = []
+        # (剩余站数, 车辆) —— 上游按 order 升序返回（最远的车在前），
+        # 这里按剩余站数升序重排，保证 buses[0] 是最近的一辆车
+        ranked: list[tuple[int, BusInfo]] = []
+
+        # 环线取模用的总站数：实时端点的 line 通常不带 stationsNum，
+        # 退化时用「车辆最大站序 / 目标站序」的较大值兜底
+        total = line_info.total_stations or max(
+            [target_order]
+            + [
+                _as_int(b.get("order"), default=0)
+                for b in buses_raw
+                if isinstance(b, dict)
+            ]
+        )
 
         for bus in buses_raw:
             if not isinstance(bus, dict):
                 continue
 
             bus_order = _as_int(bus.get("order"), default=0)
-            total = line_info.total_stations or 999
 
-            # 计算剩余站数（支持环线：当 bus_order > target_order 时取模）
+            # 计算剩余站数（支持环线：车已驶过目标站时绕行一圈取模）
             if bus_order <= target_order:
                 remaining = target_order - bus_order
-            else:
+            elif total > 0:
                 remaining = (target_order - bus_order) % total
+            else:
+                remaining = 0
 
             distance = _as_int(bus.get("distanceToSc"), default=None)
 
@@ -516,22 +530,29 @@ class ChelaiLeClient:
                         display_time=travel.get("recommTip") or travel.get("time"),
                     )
 
-            bus_models.append(
-                BusInfo(
-                    bus_id=bus.get("busId", ""),
-                    order=bus_order,
-                    lat=_as_float(bus.get("lat")),
-                    lng=_as_float(bus.get("lng")),
-                    speed=_as_float(bus.get("speed")),
-                    capacity=_as_int(bus.get("capacity"), default=0),
-                    distance_to_station=distance,
-                    eta=eta,
+            ranked.append(
+                (
+                    remaining,
+                    BusInfo(
+                        bus_id=bus.get("busId", ""),
+                        order=bus_order,
+                        lat=_as_float(bus.get("lat")),
+                        lng=_as_float(bus.get("lng")),
+                        speed=_as_float(bus.get("speed")),
+                        capacity=_as_int(bus.get("capacity"), default=0),
+                        distance_to_station=distance,
+                        eta=eta,
+                    ),
                 )
             )
 
-        # 刷新间隔（秒）
-        refresh_interval = _as_int(
-            data.get("refresh"), default=DEFAULT_REFRESH_INTERVAL
+        ranked.sort(key=lambda pair: pair[0])
+        bus_models = [bus for _, bus in ranked]
+
+        # 刷新间隔（秒）—— 上游 refreshInterval 可能为 0/缺失，回退到默认值
+        refresh_interval = (
+            _as_int(data.get("refreshInterval"), default=0)
+            or DEFAULT_REFRESH_INTERVAL
         )
 
         return RealtimeResult(

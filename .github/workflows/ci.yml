@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint (black + isort, check only)
+        run: |
+          black --check .
+          isort --check-only .
+
+      - name: Type check
+        run: mypy chelaile_sdk bus_arrival_board
+        continue-on-error: true
+
+      - name: Run offline tests
+        # 不跑 network 标记的用例：CI 不应依赖第三方实时接口
+        run: pytest -m "not network" --cov=chelaile_sdk --cov-report=term-missing

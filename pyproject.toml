@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bus-arrival-board"
+version = "0.1.0"
+description = "Real-time bus arrival information display system"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Garfield Wu", email = "wu_garfield@163.com" }]
+keywords = ["bus", "transit", "realtime", "esp32", "eink", "embedded"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "requests>=2.31.0",
+    "cryptography>=41.0.0",
+    "PyYAML>=6.0.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1", "black>=23.0", "isort>=5.12", "mypy>=1.5"]
+
+[project.urls]
+Homepage = "https://github.com/Garfield-Wuu/BusArrivalBoard"
+Issues = "https://github.com/Garfield-Wuu/BusArrivalBoard/issues"
+
+[project.scripts]
+bus-arrival = "bus_arrival_board.cli:main"
+
+[tool.setuptools]
+packages = ["chelaile_sdk", "bus_arrival_board"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+markers = ["network: 需要真实网络的集成测试（默认跳过）"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.9"
+warn_unused_ignores = true
+ignore_missing_imports = true
