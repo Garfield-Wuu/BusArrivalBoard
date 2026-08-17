@@ -6,6 +6,7 @@ idf_component_register(
         http_frame_client
         wifi_provisioning
         power_management
+        ota_update
         nvs_flash
         driver
 )

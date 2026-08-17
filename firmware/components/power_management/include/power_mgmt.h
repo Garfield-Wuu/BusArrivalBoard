@@ -48,6 +48,45 @@ static inline esp_sleep_wakeup_cause_t power_get_wakeup_cause(void)
 }
 
 /**
+ * @brief 读取电池电压（伏特）
+ *
+ * 通过 ADC 读取分压后的电池电压。需要外部分压电阻网络：
+ *
+ *     BAT+ ──┬── R1 (100kΩ) ──┬── ADC_PIN
+ *            │                 │
+ *            │                R2 (100kΩ)
+ *            │                 │
+ *     BAT- ──┴─────────────────┴── GND
+ *
+ * 1:1 分压把 4.2V 满电压降到 2.1V，落在 ADC 量程内。
+ * 分压比通过 CONFIG_BUS_BATTERY_DIVIDER_RATIO 配置。
+ *
+ * @return 电池电压（伏特）；读取失败或未启用监测时返回 -1.0f
+ */
+float power_get_battery_voltage(void);
+
+/**
+ * @brief 判断电池是否处于低电量
+ *
+ * 阈值由 CONFIG_BUS_BATTERY_LOW_MV 配置（默认 3400mV）。
+ * 单节锂电放到 3.3V 以下会显著加速老化，3.4V 是留出余量的告警点。
+ *
+ * @return true 电量低（或无法读取时保守返回 false，避免误报）
+ */
+bool power_is_battery_low(void);
+
+/**
+ * @brief 估算电池剩余百分比（0-100）
+ *
+ * 用锂电放电曲线的分段线性近似，比单纯的电压线性映射准一些，
+ * 但仍然只是粗略估计——锂电电压在中段非常平缓，误差可达 ±15%。
+ * 只适合显示"大约还有多少"，不要用来做精确决策。
+ *
+ * @return 百分比 0-100；无法读取时返回 -1
+ */
+int power_get_battery_percent(void);
+
+/**
  * @brief 检查是否为夜间（根据 RTC 时钟与 menuconfig 配置）
  *
  * 夜间模式：公交停运时跳过刷新，显著延长续航。

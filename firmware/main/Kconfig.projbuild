@@ -124,6 +124,40 @@ menu "BusArrivalBoard Configuration"
                 两次刷新之间的休眠时长。墨水屏建议不低于 300 秒，
                 过于频繁的全屏刷新会加剧残影并缩短屏幕寿命。
 
+        config BUS_BATTERY_MONITOR_ENABLE
+            bool "启用电池电压监测"
+            default y
+            help
+                通过 ADC 读取电池电压，判断低电量并上报给服务端。
+                需要外部分压电阻网络（100kΩ+100kΩ，1:1 分压）。
+
+        config BUS_BATTERY_ADC_CHANNEL
+            int "电池监测 ADC 通道"
+            depends on BUS_BATTERY_MONITOR_ENABLE
+            default 0
+            range 0 9
+            help
+                ADC1 通道号（0-9）。ESP32-S3 上，ADC1_CH0 = GPIO1。
+                具体映射参考数据手册。
+
+        config BUS_BATTERY_DIVIDER_RATIO
+            int "分压比（放大 100 倍）"
+            depends on BUS_BATTERY_MONITOR_ENABLE
+            default 200
+            range 100 1000
+            help
+                电池电压 = ADC 读数 × (此值 / 100)。
+                1:1 分压（100kΩ+100kΩ）配 200；1:2 分压配 300。
+
+        config BUS_BATTERY_LOW_MV
+            int "低电量阈值（毫伏）"
+            depends on BUS_BATTERY_MONITOR_ENABLE
+            default 3400
+            range 3000 3700
+            help
+                低于此电压时上报低电量警告。单节锂电 3.3V 以下会加速老化，
+                3.4V 是留出余量的告警点。
+
         config BUS_NIGHT_MODE_ENABLE
             bool "夜间省电模式"
             default y

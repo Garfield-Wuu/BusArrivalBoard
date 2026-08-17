@@ -1,11 +1,24 @@
-# 分区表 — 单 app 分区（简化版，OTA 暂不支持）
+# ESP32 分区表 — 双 OTA 分区，支持空中升级与自动回滚
 #
-# 总 Flash 需求：~2MB（适配 4MB Flash）
-# 后续扩展 OTA 需要：改用 ota_0 + ota_1 双分区
+# 约束：app 类型分区的偏移必须按 0x10000 (64KB) 对齐，
+#       否则 gen_esp32part.py 会直接报错。
 #
-# Name,     Type, SubType,  Offset,  Size,    Flags
-nvs,        data, nvs,      0x9000,  24K,
-phy_init,   data, phy,      0xf000,  4K,
-factory,    app,  factory,  0x10000, 3M,
-nvs_key,    data, nvs_keys, ,        4K,
-coredump,   data, coredump, ,        64K,
+# 布局（4MB Flash）：
+#   0x00000 - 0x08000  bootloader（IDF 自动占用，不在本表）
+#   0x08000 - 0x09000  分区表本身
+#   0x09000 - 0x0f000  nvs        24K   WiFi 凭据 + 用户配置
+#   0x0f000 - 0x10000  phy_init    4K
+#   0x10000 - 0x11000  otadata     8K   记录当前活动分区（需 2 个 flash sector）
+#   0x20000 - 0x1D0000 ota_0    1856K   固件槽 A（对齐到 0x20000）
+#   0x1D0000- 0x380000 ota_1    1856K   固件槽 B
+#   0x380000- 0x381000 nvs_key     4K
+#   0x381000- 0x391000 coredump   64K   崩溃现场，便于事后分析
+#
+# Name,     Type, SubType,  Offset,   Size,   Flags
+nvs,        data, nvs,      0x9000,   24K,
+phy_init,   data, phy,      0xf000,   4K,
+otadata,    data, ota,      0x10000,  8K,
+ota_0,      app,  ota_0,    0x20000,  1856K,
+ota_1,      app,  ota_1,    ,         1856K,
+nvs_key,    data, nvs_keys, ,         4K,
+coredump,   data, coredump, ,         64K,

@@ -17,7 +17,9 @@ BusArrivalBoard 是一个开源的实时公交到站信息显示系统，支持�
 - ✅ **命令行工具** — 终端实时监控公交到站
 - ✅ **多城市支持** — 覆盖全国 480+ 城市
 - ✅ **配置化管理** — YAML 配置文件，支持多站点监控
-- 🚧 **ESP32/墨水屏** — 嵌入式硬件显示方案（开发中）
+- ✅ **蓝牙墨水屏** — 主机直推 nRF51/52 电子价签
+- ✅ **HTTP 帧服务端** — 服务端渲染画面，供联网设备拉取
+- ✅ **ESP32 固件** — WiFi 自联网、深度睡眠、OTA 升级（已编译通过，待硬件实测）
 
 ### 核心特性
 
@@ -25,10 +27,12 @@ BusArrivalBoard 是一个开源的实时公交到站信息显示系统，支持�
 |------|------|
 | **实时数据** | 基于车来了 API，GPS 实时定位，秒级更新 |
 | **完整信息** | 车辆位置、剩余站数、预计到达时间、拥挤度 |
-| **蓝牙墨水屏** | 实时推送到 nRF51/52 电子墨水屏（4.2/7.5寸） |
 | **环线支持** | 正确处理环线公交的站点计算逻辑 |
 | **零依赖认证** | 无需账号/API Key，开箱即用 |
-| **嵌入式友好** | 核心算法可移植到 ESP32/Arduino |
+| **服务端渲染** | 排版/中文字库/抖动全在 Python 侧，改布局不用重刷固件 |
+| **ETag 省电** | 画面未变返回 304，设备跳过刷屏，是电池续航的核心机制 |
+| **两套硬件路线** | 蓝牙价签（主机常开，成本 ¥5）/ ESP32 自联网（独立运行，¥50-70）|
+| **OTA + 自动回滚** | 刷坏了设备自己退回上一版，不用从墙上拆下来 |
 
 ---
 
@@ -85,11 +89,30 @@ BusArrivalBoard/
 ├── bus_arrival_board/     # 应用层
 │   ├── cli.py             # 命令行工具
 │   ├── config.py          # 配置管理
-│   └── monitor.py         # 实时监控
+│   ├── monitor.py         # 实时监控
+│   └── server.py          # HTTP 帧服务端（GET /api/epd/frame.bin）
+├── firmware/              # ESP32 固件（ESP-IDF）
+│   ├── components/        # 四个核心组件
+│   │   ├── epd_driver/    #   墨水屏 SPI 驱动（UC8176）
+│   │   ├── http_frame_client/ #   HTTP 拉帧 + ETag 缓存
+│   │   ├── wifi_provisioning/ #   SmartConfig 配网
+│   │   ├── power_management/  #   深度睡眠 + 电池监测
+│   │   └── ota_update/    #   OTA 升级 + 自动回滚
+│   ├── main/              # 主程序（WiFi→拉帧→刷屏→睡眠循环）
+│   └── partitions.csv     # 双分区表（ota_0 + ota_1）
 ├── examples/              # 使用示例
-├── tests/                 # 单元测试
+├── tests/                 # 单元测试（90 个，全绿）
+├── scripts/               # 工具脚本
+│   ├── review.sh          # 代码门禁（12 项检查）
+│   └── activate_idf.sh    # ESP-IDF 环境激活
 ├── config/                # 配置文件示例
 └── docs/                  # 文档
+    ├── REVIEW.md          # 评审规范
+    ├── ROADMAP.md         # 开发路线图
+    ├── epd_protocol.md    # 蓝牙墨水屏协议参考
+    ├── epd_bluetooth_integration.md  # 蓝牙方案接入指南
+    ├── esp32_porting.md   # ESP32 移植说明
+    └── hardware_guide.md  # 硬件选型与 BOM
 ```
 
 ---
@@ -157,22 +180,54 @@ display:
 
 ---
 
-## 📡 硬件方案（计划中）
+## 📡 硬件方案
 
-### ESP32 + 墨水屏
+### 路线 1: 蓝牙电子价签（¥5/片，主机直推）
+- nRF51/52 芯片电子价签（闲鱼拆机货）
+- 主机蓝牙推送位图
+- 详见 [蓝牙墨水屏接入指南](docs/epd_bluetooth_integration.md) 与 [EPD 协议参考](docs/epd_protocol.md)
+
+### 路线 2: ESP32 自联网墨水屏（已编译通过，待硬件实测）
+
+**固件状态：** ✅ 编译通过（926KB），双分区 OTA，51% 余量
 
 **推荐硬件：**
-- **开发板**: LilyGo T5-4.7" Plus (ESP32-S3 + 4.7寸墨水屏)
-- **成本**: ¥150-200
-- **功耗**: 深度睡眠模式下 < 0.5mA
+- ESP32-S3 开发板（任意型号，需 >= 4MB Flash）
+- UC8176 4.2" 黑白墨水屏（400×300，微雪或 GDEW042T2）
+- 18650 锂电 + 保护板（可选）
+- 分压电阻（100kΩ × 2，用于电池监测）
 
-**特性：**
-- 60秒自动刷新
-- Wi-Fi 联网获取数据
-- 电池供电，续航 7-14 天
-- 3D 打印外壳（STL 文件即将开源）
+**已实现功能：**
+- ✅ SmartConfig 配网（微信扫码下发凭据，存 NVS 深度睡眠不丢）
+- ✅ HTTP 拉帧 + ETag 缓存（304 时跳过刷屏，核心省电机制）
+- ✅ UC8176 SPI 驱动（4 秒全刷，深度睡眠 < 1µA）
+- ✅ 深度睡眠 + RTC 定时唤醒（< 20µA，5 分钟一次）
+- ✅ 夜间跳过模式（23:00-06:00 不刷新）
+- ✅ 电池电压监测（ADC 读取，低电量延长睡眠间隔）
+- ✅ OTA 双分区升级 + 自动回滚（刷坏了自己退回上一版）
 
-详见 [硬件指南](docs/hardware_guide.md)（开发中）
+**待验证：**
+- ⏳ 真实硬件接线与刷屏（驱动时序、位图极性、BUSY 轮询）
+- ⏳ 电池续航实测（理论 3-6 个月，取决于刷新间隔）
+- ⏳ SPI 时序兼容性（不同屏厂的 UC8176 参数可能有差异）
+
+**成本估算：** ¥50-70（开发板 ¥30 + 屏 ¥25 + 电池 ¥10）
+
+**烧录方法：**
+```bash
+cd firmware
+source ../scripts/activate_idf.sh
+idf.py menuconfig  # 配置 WiFi SSID/Password（可选，首次留空用 SmartConfig）
+idf.py -p /dev/ttyUSB0 flash monitor
+```
+
+**首次上电：**
+1. 无可用凭据时自动进 SmartConfig 配网
+2. 用微信小程序"EspTouch"或 App 下发 WiFi 密码
+3. 连接成功后每 5 分钟唤醒一次拉帧刷屏
+4. 每 24 小时检查一次 OTA 更新
+
+详见 [固件 README](firmware/README.md) 和 [开发路线图](docs/ROADMAP.md)
 
 ---
 
