@@ -199,11 +199,33 @@ if [[ -d firmware ]]; then
         pass "固件无硬编码凭据"
     fi
 
-    # idf.py 可用时做真实构建
-    if command -v idf.py >/dev/null 2>&1; then
-        skip "idf.py 存在，建议手动运行 idf.py build 验证"
+    # 真实编译验证。--quick 下跳过（首次全量编译要几分钟），
+    # 但绝不谎报成通过：跳过就明确说是跳过。
+    if [[ -n "$QUICK" ]]; then
+        skip "固件编译（--quick 模式跳过，完整门禁会真编）"
+    elif [[ -f scripts/activate_idf.sh ]]; then
+        echo "      编译固件（首次约 3-5 分钟）..."
+        if (
+            # 子 shell 隔离环境变更，避免污染后续检查
+            source scripts/activate_idf.sh >/dev/null 2>&1
+            cd firmware && idf.py build >/tmp/idf_build_gate.log 2>&1
+        ); then
+            BIN=firmware/build/bus_arrival_display.bin
+            if [[ -f "$BIN" ]]; then
+                pass "固件编译通过（$(stat -c%s "$BIN") 字节）"
+            else
+                fail "编译报成功但产物缺失"
+            fi
+            # IRAM 溢出是 ESP32 的经典雷区，链接期才炸，提前预警
+            if grep -qiE "IRAM.*(9[5-9]|100)\.[0-9]+ *%" /tmp/idf_build_gate.log; then
+                warn "IRAM 占用超过 95%，后续加代码可能链接失败"
+            fi
+        else
+            fail "固件编译失败，日志见 /tmp/idf_build_gate.log"
+            grep -iE "error|fatal" /tmp/idf_build_gate.log | head -5 | sed 's/^/      /'
+        fi
     else
-        skip "idf.py 未安装（无法验证真实编译）"
+        skip "缺少 scripts/activate_idf.sh，无法激活 ESP-IDF 环境"
     fi
 else
     skip "firmware/ 目录不存在"
