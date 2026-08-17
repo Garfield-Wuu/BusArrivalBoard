@@ -1,0 +1,147 @@
+menu "BusArrivalBoard Configuration"
+
+    menu "WiFi"
+
+        config BUS_WIFI_SSID
+            string "WiFi SSID"
+            default ""
+            help
+                留空则跳过直连、直接进 SmartConfig 配网。
+                首次刷机建议留空，用微信扫码配网，凭据会存入 NVS。
+
+        config BUS_WIFI_PASSWORD
+            string "WiFi 密码"
+            default ""
+            help
+                注意：填了密码后 sdkconfig 就含明文凭据，该文件已在
+                .gitignore 中，不要手动提交。
+
+        config BUS_WIFI_CONNECT_TIMEOUT_MS
+            int "WiFi 连接超时（毫秒）"
+            default 15000
+            range 5000 60000
+            help
+                超时后若启用 SmartConfig 会转入配网模式。
+
+        config BUS_WIFI_ENABLE_SMARTCONFIG
+            bool "启用 SmartConfig 配网"
+            default y
+            help
+                连接失败时进入 SmartConfig（ESP-Touch v2），
+                用微信小程序或 EspTouch App 扫码下发凭据。
+
+        config BUS_WIFI_SMARTCONFIG_TIMEOUT_MS
+            int "SmartConfig 超时（毫秒）"
+            depends on BUS_WIFI_ENABLE_SMARTCONFIG
+            default 120000
+            range 30000 600000
+            help
+                配网等待时长，超时后进深度睡眠重试，避免空耗电量。
+
+    endmenu
+
+    menu "服务端"
+
+        config BUS_SERVER_URL
+            string "帧接口 URL"
+            default "http://192.168.1.100:8000/api/epd/frame.bin"
+            help
+                BusArrivalBoard 服务端的帧下载地址。
+                注意 ESP32 不能连仅 5GHz 的网络，服务端需在同一 2.4G 局域网。
+
+        config BUS_SERVER_TOKEN
+            string "设备认证 Token"
+            default ""
+            help
+                可选。服务端设了 BUS_API_TOKEN 时必须填写一致的值，
+                会通过 X-Device-Token 头发送。
+
+        config BUS_HTTP_TIMEOUT_MS
+            int "HTTP 超时（毫秒）"
+            default 15000
+            range 3000 60000
+
+    endmenu
+
+    menu "墨水屏"
+
+        choice BUS_EPD_MODEL
+            prompt "屏幕型号"
+            default BUS_EPD_MODEL_UC8176_BW
+            help
+                当前仅完整实现 UC8176 黑白。
+
+            config BUS_EPD_MODEL_UC8176_BW
+                bool "4.2寸 黑白 UC8176 (400x300)"
+
+        endchoice
+
+        config BUS_EPD_WIDTH
+            int "屏幕宽度（像素）"
+            default 400
+
+        config BUS_EPD_HEIGHT
+            int "屏幕高度（像素）"
+            default 300
+
+        menu "引脚定义"
+
+            config BUS_EPD_PIN_SCK
+                int "SPI SCK"
+                default 12
+
+            config BUS_EPD_PIN_MOSI
+                int "SPI MOSI"
+                default 11
+
+            config BUS_EPD_PIN_CS
+                int "CS 片选"
+                default 10
+
+            config BUS_EPD_PIN_DC
+                int "DC 数据/命令"
+                default 8
+
+            config BUS_EPD_PIN_RST
+                int "RST 复位"
+                default 7
+
+            config BUS_EPD_PIN_BUSY
+                int "BUSY 忙碌"
+                default 9
+
+        endmenu
+
+    endmenu
+
+    menu "电源管理"
+
+        config BUS_SLEEP_INTERVAL_SEC
+            int "深度睡眠间隔（秒）"
+            default 300
+            range 60 3600
+            help
+                两次刷新之间的休眠时长。墨水屏建议不低于 300 秒，
+                过于频繁的全屏刷新会加剧残影并缩短屏幕寿命。
+
+        config BUS_NIGHT_MODE_ENABLE
+            bool "夜间省电模式"
+            default y
+            help
+                夜间公交停运，跳过刷新可显著延长电池续航。
+
+        config BUS_NIGHT_START_HOUR
+            int "夜间开始小时 (0-23)"
+            depends on BUS_NIGHT_MODE_ENABLE
+            default 23
+            range 0 23
+
+        config BUS_NIGHT_END_HOUR
+            int "夜间结束小时 (0-23)"
+            depends on BUS_NIGHT_MODE_ENABLE
+            default 6
+            range 0 23
+
+    endmenu
+
+endmenu
