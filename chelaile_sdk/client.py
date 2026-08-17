@@ -472,6 +472,19 @@ class ChelaiLeClient:
 
         # 解析线路基础信息
         line_raw = data.get("line", {})
+        buses_raw = data.get("buses", [])
+
+        # 总站数：实时端点的 line 不带 stationsNum（仅 lineDetail 有），
+        # 缺失时用「目标站序 / 车辆最大站序」的较大值兜底，供环线取模使用
+        total = _as_int(line_raw.get("stationsNum"), default=0) or max(
+            [target_order]
+            + [
+                _as_int(b.get("order"), default=0)
+                for b in buses_raw
+                if isinstance(b, dict)
+            ]
+        )
+
         line_info = LineInfo(
             line_id=str(line_raw.get("lineId", line_id)),
             name=line_raw.get("name", ""),
@@ -480,25 +493,13 @@ class ChelaiLeClient:
             end_station=line_raw.get("endSn", ""),
             first_time=line_raw.get("firstTime"),
             last_time=line_raw.get("lastTime"),
-            total_stations=_as_int(line_raw.get("stationsNum")),
+            total_stations=total,
         )
 
         # 解析车辆列表
-        buses_raw = data.get("buses", [])
         # (剩余站数, 车辆) —— 上游按 order 升序返回（最远的车在前），
         # 这里按剩余站数升序重排，保证 buses[0] 是最近的一辆车
         ranked: list[tuple[int, BusInfo]] = []
-
-        # 环线取模用的总站数：实时端点的 line 通常不带 stationsNum，
-        # 退化时用「车辆最大站序 / 目标站序」的较大值兜底
-        total = line_info.total_stations or max(
-            [target_order]
-            + [
-                _as_int(b.get("order"), default=0)
-                for b in buses_raw
-                if isinstance(b, dict)
-            ]
-        )
 
         for bus in buses_raw:
             if not isinstance(bus, dict):
