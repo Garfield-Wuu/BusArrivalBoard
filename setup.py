@@ -34,6 +34,10 @@ setup(
         "python-dotenv>=1.0.0",
         "pydantic>=2.0.0",
     ],
+    extras_require={
+        # 蓝牙墨水屏显示（nRF51/nRF52 + EPD-nRF5 固件）
+        "epd": ["bleak>=0.21.0", "pillow>=10.0.0"],
+    },
     entry_points={
         "console_scripts": [
             "bus-arrival=bus_arrival_board.cli:main",
